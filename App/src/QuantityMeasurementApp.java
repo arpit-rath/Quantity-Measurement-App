@@ -3,15 +3,15 @@ public class QuantityMeasurementApp {
     /*
      * ===========================
      * ENUM: LengthUnit
-     * ===========================
      * Base unit = FEET
+     * ===========================
      */
     public enum LengthUnit {
 
         FEET(1.0),
         INCH(1.0 / 12.0),
-        YARD(3.0),                     // 1 yard = 3 feet
-        CM(0.393701 / 12.0);           // 1 cm = 0.393701 inches -> convert to feet
+        YARD(3.0),
+        CM(0.393701 / 12.0);
 
         private final double toFeetFactor;
 
@@ -21,6 +21,10 @@ public class QuantityMeasurementApp {
 
         public double toFeet(double value) {
             return value * toFeetFactor;
+        }
+
+        public double fromFeet(double feetValue) {
+            return feetValue / toFeetFactor;
         }
     }
 
@@ -36,6 +40,10 @@ public class QuantityMeasurementApp {
 
         public QuantityLength(double value, LengthUnit unit) {
 
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("Invalid numeric value");
+            }
+
             if (unit == null) {
                 throw new IllegalArgumentException("Unit cannot be null");
             }
@@ -44,8 +52,30 @@ public class QuantityMeasurementApp {
             this.unit = unit;
         }
 
+        public double getValue() {
+            return value;
+        }
+
+        public LengthUnit getUnit() {
+            return unit;
+        }
+
         private double toBaseUnit() {
             return unit.toFeet(value);
+        }
+
+        /*
+         * Instance conversion method (returns NEW object)
+         */
+        public QuantityLength convertTo(LengthUnit targetUnit) {
+            if (targetUnit == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
+
+            double base = toBaseUnit();
+            double converted = targetUnit.fromFeet(base);
+
+            return new QuantityLength(converted, targetUnit);
         }
 
         @Override
@@ -73,15 +103,56 @@ public class QuantityMeasurementApp {
 
     /*
      * ===========================
+     * STATIC CONVERSION API
+     * ===========================
+     */
+    public static double convert(double value, LengthUnit source, LengthUnit target) {
+
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Invalid value");
+        }
+
+        if (source == null || target == null) {
+            throw new IllegalArgumentException("Units cannot be null");
+        }
+
+        double base = source.toFeet(value);
+        return target.fromFeet(base);
+    }
+
+    /*
+     * ===========================
+     * METHOD OVERLOADING DEMO
+     * ===========================
+     */
+
+    // Method 1
+    public static double demonstrateLengthConversion(double value,
+                                                     LengthUnit from,
+                                                     LengthUnit to) {
+        return convert(value, from, to);
+    }
+
+    // Method 2
+    public static double demonstrateLengthConversion(QuantityLength q,
+                                                     LengthUnit to) {
+        return q.convertTo(to).getValue();
+    }
+
+    /*
+     * ===========================
      * MAIN METHOD
      * ===========================
      */
     public static void main(String[] args) {
 
-        System.out.println(new QuantityLength(1.0, LengthUnit.YARD)
-                .equals(new QuantityLength(3.0, LengthUnit.FEET)));
+        System.out.println("convert(1.0, FEET, INCH) = "
+                + convert(1.0, LengthUnit.FEET, LengthUnit.INCH));
 
-        System.out.println(new QuantityLength(1.0, LengthUnit.CM)
-                .equals(new QuantityLength(0.393701, LengthUnit.INCH)));
+        System.out.println("convert(3.0, YARD, FEET) = "
+                + convert(3.0, LengthUnit.YARD, LengthUnit.FEET));
+
+        System.out.println("convert(1.0, CM, INCH) = "
+                + convert(1.0, LengthUnit.CM, LengthUnit.INCH));
     }
 }
