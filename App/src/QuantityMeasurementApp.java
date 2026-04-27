@@ -4,11 +4,14 @@ public class QuantityMeasurementApp {
      * ===========================
      * ENUM: LengthUnit
      * ===========================
-     * Defines supported units and their conversion to base unit (FEET)
+     * Base unit = FEET
      */
     public enum LengthUnit {
+
         FEET(1.0),
-        INCH(1.0 / 12.0);
+        INCH(1.0 / 12.0),
+        YARD(3.0),                     // 1 yard = 3 feet
+        CM(0.393701 / 12.0);           // 1 cm = 0.393701 inches -> convert to feet
 
         private final double toFeetFactor;
 
@@ -25,7 +28,6 @@ public class QuantityMeasurementApp {
      * ===========================
      * CLASS: QuantityLength
      * ===========================
-     * Generic class representing a measurement with value + unit
      */
     public static class QuantityLength {
 
@@ -42,36 +44,19 @@ public class QuantityMeasurementApp {
             this.unit = unit;
         }
 
-        public double getValue() {
-            return value;
-        }
-
-        public LengthUnit getUnit() {
-            return unit;
-        }
-
-        /*
-         * Convert any unit to base unit (feet)
-         */
         private double toBaseUnit() {
             return unit.toFeet(value);
         }
 
-        /*
-         * Override equals for value-based comparison (with conversion)
-         */
         @Override
         public boolean equals(Object obj) {
 
-            // Same reference
             if (this == obj) return true;
 
-            // Null or different type
             if (obj == null || getClass() != obj.getClass()) return false;
 
             QuantityLength other = (QuantityLength) obj;
 
-            // Compare after converting both to feet
             return Double.compare(this.toBaseUnit(), other.toBaseUnit()) == 0;
         }
 
@@ -88,21 +73,15 @@ public class QuantityMeasurementApp {
 
     /*
      * ===========================
-     * MAIN METHOD (Demo)
+     * MAIN METHOD
      * ===========================
      */
     public static void main(String[] args) {
 
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        System.out.println(new QuantityLength(1.0, LengthUnit.YARD)
+                .equals(new QuantityLength(3.0, LengthUnit.FEET)));
 
-        System.out.println("Input: " + q1 + " and " + q2);
-        System.out.println("Output: Equal (" + q1.equals(q2) + ")");
-
-        QuantityLength q3 = new QuantityLength(1.0, LengthUnit.INCH);
-        QuantityLength q4 = new QuantityLength(1.0, LengthUnit.INCH);
-
-        System.out.println("Input: " + q3 + " and " + q4);
-        System.out.println("Output: Equal (" + q3.equals(q4) + ")");
+        System.out.println(new QuantityLength(1.0, LengthUnit.CM)
+                .equals(new QuantityLength(0.393701, LengthUnit.INCH)));
     }
 }
