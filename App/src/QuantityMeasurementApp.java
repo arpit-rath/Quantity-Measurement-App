@@ -1,56 +1,87 @@
-// =========================
-// VolumeUnit.java
-// =========================
-public enum VolumeUnit implements IMeasurable {
+public class QuantityMeasurementApp {
 
-    LITRE(1.0),
-    MILLILITRE(0.001),
-    GALLON(3.78541);
+    /*
+     * ===========================
+     * ENUM: LengthUnit
+     * ===========================
+     * Base unit = FEET
+     */
+    public enum LengthUnit {
 
-    private final double factor;
+        FEET(1.0),
+        INCH(1.0 / 12.0),
+        YARD(3.0),                     // 1 yard = 3 feet
+        CM(0.393701 / 12.0);           // 1 cm = 0.393701 inches -> convert to feet
 
-    VolumeUnit(double factor) {
-        this.factor = factor;
+        private final double toFeetFactor;
+
+        LengthUnit(double toFeetFactor) {
+            this.toFeetFactor = toFeetFactor;
+        }
+
+        public double toFeet(double value) {
+            return value * toFeetFactor;
+        }
     }
 
-    @Override
-    public double getConversionFactor() {
-        return factor;
+    /*
+     * ===========================
+     * CLASS: QuantityLength
+     * ===========================
+     */
+    public static class QuantityLength {
+
+        private final double value;
+        private final LengthUnit unit;
+
+        public QuantityLength(double value, LengthUnit unit) {
+
+            if (unit == null) {
+                throw new IllegalArgumentException("Unit cannot be null");
+            }
+
+            this.value = value;
+            this.unit = unit;
+        }
+
+        private double toBaseUnit() {
+            return unit.toFeet(value);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+
+            if (this == obj) return true;
+
+            if (obj == null || getClass() != obj.getClass()) return false;
+
+            QuantityLength other = (QuantityLength) obj;
+
+            return Double.compare(this.toBaseUnit(), other.toBaseUnit()) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return Double.hashCode(toBaseUnit());
+        }
+
+        @Override
+        public String toString() {
+            return "Quantity(" + value + ", " + unit + ")";
+        }
     }
 
-    @Override
-    public double convertToBaseUnit(double value) {
-        return value * factor;
-    }
+    /*
+     * ===========================
+     * MAIN METHOD
+     * ===========================
+     */
+    public static void main(String[] args) {
 
-    @Override
-    public double convertFromBaseUnit(double baseValue) {
-        return baseValue / factor;
-    }
+        System.out.println(new QuantityLength(1.0, LengthUnit.YARD)
+                .equals(new QuantityLength(3.0, LengthUnit.FEET)));
 
-    @Override
-    public String getUnitName() {
-        return name();
+        System.out.println(new QuantityLength(1.0, LengthUnit.CM)
+                .equals(new QuantityLength(0.393701, LengthUnit.INCH)));
     }
 }
-
-// =========================
-// Add inside main()
-// =========================
-
-// VOLUME
-var v1 = new Quantity<>(1.0, VolumeUnit.LITRE);
-var v2 = new Quantity<>(1000.0, VolumeUnit.MILLILITRE);
-var v3 = new Quantity<>(1.0, VolumeUnit.GALLON);
-
-// Equality
-System.out.println(v1.equals(v2)); // true
-
-// Conversion
-        System.out.println(v1.convertTo(VolumeUnit.MILLILITRE)); // 1000 mL
-
-// Addition
-        System.out.println(v1.add(v2)); // 2 L
-
-// Explicit unit
-        System.out.println(v1.add(v3, VolumeUnit.MILLILITRE));
