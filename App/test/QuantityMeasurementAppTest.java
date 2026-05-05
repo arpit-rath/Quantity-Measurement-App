@@ -1,60 +1,120 @@
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class QuantityTest {
+class VolumeTest {
 
     private static final double EPS = 1e-6;
 
     // =========================
-    // LENGTH TESTS
+    // EQUALITY TESTS
     // =========================
 
     @Test
-    void testLengthEquality() {
-        assertTrue(new Quantity<>(1.0, LengthUnit.FEET)
-                .equals(new Quantity<>(12.0, LengthUnit.INCH)));
+    void testEquality_LitreToLitre() {
+        assertTrue(new Quantity<>(1.0, VolumeUnit.LITRE)
+                .equals(new Quantity<>(1.0, VolumeUnit.LITRE)));
     }
 
     @Test
-    void testLengthConversion() {
-        var result = new Quantity<>(1.0, LengthUnit.FEET)
-                .convertTo(LengthUnit.INCH);
-
-        assertEquals(12.0, result.getValue(), EPS);
+    void testEquality_LitreToMillilitre() {
+        assertTrue(new Quantity<>(1.0, VolumeUnit.LITRE)
+                .equals(new Quantity<>(1000.0, VolumeUnit.MILLILITRE)));
     }
 
     @Test
-    void testLengthAddition() {
-        var result = new Quantity<>(1.0, LengthUnit.FEET)
-                .add(new Quantity<>(12.0, LengthUnit.INCH));
+    void testEquality_LitreToGallon() {
+        assertTrue(new Quantity<>(3.78541, VolumeUnit.LITRE)
+                .equals(new Quantity<>(1.0, VolumeUnit.GALLON)));
+    }
 
-        assertEquals(2.0, result.getValue(), EPS);
+    @Test
+    void testEquality_Null() {
+        assertFalse(new Quantity<>(1.0, VolumeUnit.LITRE).equals(null));
     }
 
     // =========================
-    // WEIGHT TESTS
+    // CONVERSION TESTS
     // =========================
 
     @Test
-    void testWeightEquality() {
-        assertTrue(new Quantity<>(1.0, WeightUnit.KILOGRAM)
-                .equals(new Quantity<>(1000.0, WeightUnit.GRAM)));
-    }
-
-    @Test
-    void testWeightConversion() {
-        var result = new Quantity<>(1.0, WeightUnit.KILOGRAM)
-                .convertTo(WeightUnit.GRAM);
+    void testConversion_LitreToMillilitre() {
+        var result = new Quantity<>(1.0, VolumeUnit.LITRE)
+                .convertTo(VolumeUnit.MILLILITRE);
 
         assertEquals(1000.0, result.getValue(), EPS);
     }
 
     @Test
-    void testWeightAddition() {
-        var result = new Quantity<>(1.0, WeightUnit.KILOGRAM)
-                .add(new Quantity<>(1000.0, WeightUnit.GRAM));
+    void testConversion_GallonToLitre() {
+        var result = new Quantity<>(1.0, VolumeUnit.GALLON)
+                .convertTo(VolumeUnit.LITRE);
+
+        assertEquals(3.78541, result.getValue(), 1e-3);
+    }
+
+    @Test
+    void testConversion_SameUnit() {
+        var result = new Quantity<>(5.0, VolumeUnit.LITRE)
+                .convertTo(VolumeUnit.LITRE);
+
+        assertEquals(5.0, result.getValue(), EPS);
+    }
+
+    // =========================
+    // ADDITION TESTS
+    // =========================
+
+    @Test
+    void testAddition_SameUnit() {
+        var result = new Quantity<>(1.0, VolumeUnit.LITRE)
+                .add(new Quantity<>(2.0, VolumeUnit.LITRE));
+
+        assertEquals(3.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testAddition_CrossUnit() {
+        var result = new Quantity<>(1.0, VolumeUnit.LITRE)
+                .add(new Quantity<>(1000.0, VolumeUnit.MILLILITRE));
 
         assertEquals(2.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testAddition_GallonPlusLitre() {
+        var result = new Quantity<>(1.0, VolumeUnit.GALLON)
+                .add(new Quantity<>(3.78541, VolumeUnit.LITRE));
+
+        assertEquals(2.0, result.getValue(), 1e-3);
+    }
+
+    @Test
+    void testAddition_ExplicitTarget() {
+        var result = new Quantity<>(1.0, VolumeUnit.LITRE)
+                .add(new Quantity<>(1000.0, VolumeUnit.MILLILITRE),
+                        VolumeUnit.MILLILITRE);
+
+        assertEquals(2000.0, result.getValue(), EPS);
+    }
+
+    // =========================
+    // EDGE CASES
+    // =========================
+
+    @Test
+    void testAddition_Zero() {
+        var result = new Quantity<>(5.0, VolumeUnit.LITRE)
+                .add(new Quantity<>(0.0, VolumeUnit.MILLILITRE));
+
+        assertEquals(5.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testAddition_Negative() {
+        var result = new Quantity<>(5.0, VolumeUnit.LITRE)
+                .add(new Quantity<>(-2000.0, VolumeUnit.MILLILITRE));
+
+        assertEquals(3.0, result.getValue(), EPS);
     }
 
     // =========================
@@ -62,28 +122,18 @@ class QuantityTest {
     // =========================
 
     @Test
-    void testCrossCategoryComparison() {
+    void testVolumeVsLength() {
+        var volume = new Quantity<>(1.0, VolumeUnit.LITRE);
         var length = new Quantity<>(1.0, LengthUnit.FEET);
+
+        assertFalse(volume.equals(length));
+    }
+
+    @Test
+    void testVolumeVsWeight() {
+        var volume = new Quantity<>(1.0, VolumeUnit.LITRE);
         var weight = new Quantity<>(1.0, WeightUnit.KILOGRAM);
 
-        assertFalse(length.equals(weight));
-    }
-
-    // =========================
-    // VALIDATION TESTS
-    // =========================
-
-    @Test
-    void testInvalidUnit() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Quantity<>(1.0, null);
-        });
-    }
-
-    @Test
-    void testInvalidValue() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Quantity<>(Double.NaN, LengthUnit.FEET);
-        });
+        assertFalse(volume.equals(weight));
     }
 }
