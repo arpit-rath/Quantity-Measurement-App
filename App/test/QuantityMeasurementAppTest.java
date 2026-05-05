@@ -1,99 +1,154 @@
-public class QuantityLength {
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-    private final double value;
-    private final LengthUnit unit;
+class QuantityWeightTest {
 
-    public QuantityLength(double value, LengthUnit unit) {
+    private static final double EPS = 1e-6;
 
-        if (!Double.isFinite(value)) {
-            throw new IllegalArgumentException("Invalid value");
-        }
+    // =========================
+    // EQUALITY TESTS
+    // =========================
 
-        if (unit == null) {
-            throw new IllegalArgumentException("Unit cannot be null");
-        }
-
-        this.value = value;
-        this.unit = unit;
+    @Test
+    void testEquality_KgToKg_SameValue() {
+        assertTrue(new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .equals(new QuantityWeight(1.0, WeightUnit.KILOGRAM)));
     }
 
-    public double getValue() {
-        return value;
+    @Test
+    void testEquality_KgToGram() {
+        assertTrue(new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .equals(new QuantityWeight(1000.0, WeightUnit.GRAM)));
     }
 
-    public LengthUnit getUnit() {
-        return unit;
+    @Test
+    void testEquality_KgToPound() {
+        assertTrue(new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .equals(new QuantityWeight(2.20462, WeightUnit.POUND)));
     }
 
-    /*
-     * Convert to another unit
-     */
-    public QuantityLength convertTo(LengthUnit targetUnit) {
-
-        if (targetUnit == null) {
-            throw new IllegalArgumentException("Target unit cannot be null");
-        }
-
-        double base = unit.convertToBaseUnit(value);
-        double converted = targetUnit.convertFromBaseUnit(base);
-
-        return new QuantityLength(converted, targetUnit);
+    @Test
+    void testEquality_DifferentValue() {
+        assertFalse(new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .equals(new QuantityWeight(2.0, WeightUnit.KILOGRAM)));
     }
 
-    /*
-     * ADD (UC6 default → first unit)
-     */
-    public QuantityLength add(QuantityLength other) {
-        return add(other, this.unit);
+    @Test
+    void testEquality_NullComparison() {
+        assertFalse(new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .equals(null));
     }
 
-    /*
-     * ADD (UC7 explicit target unit)
-     */
-    public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
-
-        if (other == null) {
-            throw new IllegalArgumentException("Second operand cannot be null");
-        }
-
-        if (targetUnit == null) {
-            throw new IllegalArgumentException("Target unit cannot be null");
-        }
-
-        double sumBase =
-                unit.convertToBaseUnit(value) +
-                        other.unit.convertToBaseUnit(other.value);
-
-        double result = targetUnit.convertFromBaseUnit(sumBase);
-
-        return new QuantityLength(result, targetUnit);
+    @Test
+    void testEquality_SameReference() {
+        var w = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+        assertTrue(w.equals(w));
     }
 
-    /*
-     * EQUALITY (UC3+)
-     */
-    @Override
-    public boolean equals(Object obj) {
+    // =========================
+    // CONVERSION TESTS
+    // =========================
 
-        if (this == obj) return true;
+    @Test
+    void testConversion_KgToGram() {
+        var result = new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .convertTo(WeightUnit.GRAM);
 
-        if (obj == null || getClass() != obj.getClass()) return false;
-
-        QuantityLength other = (QuantityLength) obj;
-
-        return Double.compare(
-                unit.convertToBaseUnit(value),
-                other.unit.convertToBaseUnit(other.value)
-        ) == 0;
+        assertEquals(1000.0, result.getValue(), EPS);
     }
 
-    @Override
-    public int hashCode() {
-        return Double.hashCode(unit.convertToBaseUnit(value));
+    @Test
+    void testConversion_PoundToKg() {
+        var result = new QuantityWeight(2.20462, WeightUnit.POUND)
+                .convertTo(WeightUnit.KILOGRAM);
+
+        assertEquals(1.0, result.getValue(), 1e-3);
     }
 
-    @Override
-    public String toString() {
-        return "Quantity(" + value + ", " + unit + ")";
+    @Test
+    void testConversion_SameUnit() {
+        var result = new QuantityWeight(5.0, WeightUnit.KILOGRAM)
+                .convertTo(WeightUnit.KILOGRAM);
+
+        assertEquals(5.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testConversion_Zero() {
+        var result = new QuantityWeight(0.0, WeightUnit.KILOGRAM)
+                .convertTo(WeightUnit.GRAM);
+
+        assertEquals(0.0, result.getValue(), EPS);
+    }
+
+    // =========================
+    // ADDITION TESTS
+    // =========================
+
+    @Test
+    void testAddition_SameUnit() {
+        var result = new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .add(new QuantityWeight(2.0, WeightUnit.KILOGRAM));
+
+        assertEquals(3.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testAddition_CrossUnit() {
+        var result = new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .add(new QuantityWeight(1000.0, WeightUnit.GRAM));
+
+        assertEquals(2.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testAddition_ExplicitTarget() {
+        var result = new QuantityWeight(1.0, WeightUnit.KILOGRAM)
+                .add(new QuantityWeight(1000.0, WeightUnit.GRAM),
+                        WeightUnit.GRAM);
+
+        assertEquals(2000.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testAddition_PoundPlusKg() {
+        var result = new QuantityWeight(2.20462, WeightUnit.POUND)
+                .add(new QuantityWeight(1.0, WeightUnit.KILOGRAM));
+
+        assertEquals(4.40924, result.getValue(), 1e-3);
+    }
+
+    @Test
+    void testAddition_Zero() {
+        var result = new QuantityWeight(5.0, WeightUnit.KILOGRAM)
+                .add(new QuantityWeight(0.0, WeightUnit.GRAM));
+
+        assertEquals(5.0, result.getValue(), EPS);
+    }
+
+    @Test
+    void testAddition_Negative() {
+        var result = new QuantityWeight(5.0, WeightUnit.KILOGRAM)
+                .add(new QuantityWeight(-2000.0, WeightUnit.GRAM));
+
+        assertEquals(3.0, result.getValue(), EPS);
+    }
+
+    // =========================
+    // VALIDATION TESTS
+    // =========================
+
+    @Test
+    void testInvalidUnit() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            new QuantityWeight(1.0, null);
+        });
+    }
+
+    @Test
+    void testInvalidValue() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            new QuantityWeight(Double.NaN, WeightUnit.KILOGRAM);
+        });
     }
 }
