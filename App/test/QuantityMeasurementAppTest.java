@@ -1,181 +1,110 @@
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class QuantityMeasurementAppTest {
+class QuantityUC13Test {
 
-    /*
-     * ===========================
-     * YARD TESTS
-     * ===========================
-     */
+    private static final double EPS = 1e-6;
+
+    // =========================
+    // ADD (UNCHANGED)
+    // =========================
 
     @Test
-    void testEquality_YardToYard_SameValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-        var q2 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
+    void testAdd_BehaviorPreserved() {
+        var result = new Quantity<>(1.0, LengthUnit.FEET)
+                .add(new Quantity<>(12.0, LengthUnit.INCH));
 
-        assertTrue(q1.equals(q2));
+        assertEquals(2.0, result.getValue(), EPS);
+    }
+
+    // =========================
+    // SUBTRACT (UNCHANGED)
+    // =========================
+
+    @Test
+    void testSubtract_BehaviorPreserved() {
+        var result = new Quantity<>(10.0, LengthUnit.FEET)
+                .subtract(new Quantity<>(6.0, LengthUnit.INCH));
+
+        assertEquals(9.5, result.getValue(), EPS);
+    }
+
+    // =========================
+    // DIVIDE (UNCHANGED)
+    // =========================
+
+    @Test
+    void testDivide_BehaviorPreserved() {
+        double result = new Quantity<>(10.0, LengthUnit.FEET)
+                .divide(new Quantity<>(2.0, LengthUnit.FEET));
+
+        assertEquals(5.0, result, EPS);
+    }
+
+    // =========================
+    // VALIDATION CONSISTENCY
+    // =========================
+
+    @Test
+    void testNullOperand_AllOperations() {
+
+        var q = new Quantity<>(10.0, LengthUnit.FEET);
+
+        assertThrows(IllegalArgumentException.class, () -> q.add(null));
+        assertThrows(IllegalArgumentException.class, () -> q.subtract(null));
+        assertThrows(IllegalArgumentException.class, () -> q.divide(null));
     }
 
     @Test
-    void testEquality_YardToYard_DifferentValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-        var q2 = new QuantityMeasurementApp.QuantityLength(2.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
+    void testCrossCategory_AllOperations() {
 
-        assertFalse(q1.equals(q2));
+        var length = new Quantity<>(10.0, LengthUnit.FEET);
+        var weight = new Quantity<>(5.0, WeightUnit.KILOGRAM);
+
+        assertThrows(IllegalArgumentException.class, () -> length.add(weight));
+        assertThrows(IllegalArgumentException.class, () -> length.subtract(weight));
+        assertThrows(IllegalArgumentException.class, () -> length.divide(weight));
     }
 
-    @Test
-    void testEquality_YardToFeet_EquivalentValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-        var q2 = new QuantityMeasurementApp.QuantityLength(3.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
-
-        assertTrue(q1.equals(q2));
-    }
+    // =========================
+    // ENUM OPERATION TESTS
+    // =========================
 
     @Test
-    void testEquality_FeetToYard_EquivalentValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(3.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
-        var q2 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-
-        assertTrue(q1.equals(q2));
-    }
-
-    @Test
-    void testEquality_YardToInches_EquivalentValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-        var q2 = new QuantityMeasurementApp.QuantityLength(36.0,
-                QuantityMeasurementApp.LengthUnit.INCH);
-
-        assertTrue(q1.equals(q2));
-    }
-
-    @Test
-    void testEquality_YardToFeet_NonEquivalentValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-        var q2 = new QuantityMeasurementApp.QuantityLength(2.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
-
-        assertFalse(q1.equals(q2));
-    }
-
-    /*
-     * ===========================
-     * CENTIMETER TESTS
-     * ===========================
-     */
-
-    @Test
-    void testEquality_CMToCM_SameValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(2.0,
-                QuantityMeasurementApp.LengthUnit.CM);
-        var q2 = new QuantityMeasurementApp.QuantityLength(2.0,
-                QuantityMeasurementApp.LengthUnit.CM);
-
-        assertTrue(q1.equals(q2));
-    }
-
-    @Test
-    void testEquality_CMToInch_EquivalentValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.CM);
-        var q2 = new QuantityMeasurementApp.QuantityLength(0.393701,
-                QuantityMeasurementApp.LengthUnit.INCH);
-
-        assertTrue(q1.equals(q2));
-    }
-
-    @Test
-    void testEquality_CMToFeet_NonEquivalentValue() {
-        var q1 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.CM);
-        var q2 = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
-
-        assertFalse(q1.equals(q2));
-    }
-
-    /*
-     * ===========================
-     * TRANSITIVE PROPERTY TEST
-     * ===========================
-     */
-
-    @Test
-    void testEquality_MultiUnit_TransitiveProperty() {
-        var yard = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-
-        var feet = new QuantityMeasurementApp.QuantityLength(3.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
-
-        var inch = new QuantityMeasurementApp.QuantityLength(36.0,
-                QuantityMeasurementApp.LengthUnit.INCH);
-
-        assertTrue(yard.equals(feet));
-        assertTrue(feet.equals(inch));
-        assertTrue(yard.equals(inch));
-    }
-
-    /*
-     * ===========================
-     * NULL & SAFETY TESTS
-     * ===========================
-     */
-
-    @Test
-    void testEquality_NullComparison() {
-        var q = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
-
-        assertFalse(q.equals(null));
-    }
-
-    @Test
-    void testEquality_SameReference() {
-        var q = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.CM);
-
-        assertTrue(q.equals(q));
-    }
-
-    @Test
-    void testEquality_InvalidUnit() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            new QuantityMeasurementApp.QuantityLength(1.0, null);
+    void testDivide_ByZero() {
+        assertThrows(ArithmeticException.class, () -> {
+            new Quantity<>(10.0, LengthUnit.FEET)
+                    .divide(new Quantity<>(0.0, LengthUnit.FEET));
         });
     }
 
-    /*
-     * ===========================
-     * COMPLEX ALL-UNIT TEST
-     * ===========================
-     */
+    // =========================
+    // IMMUTABILITY
+    // =========================
 
     @Test
-    void testEquality_AllUnits_ComplexScenario() {
+    void testImmutability() {
 
-        var yard = new QuantityMeasurementApp.QuantityLength(2.0,
-                QuantityMeasurementApp.LengthUnit.YARD);
+        var q1 = new Quantity<>(10.0, LengthUnit.FEET);
+        var q2 = new Quantity<>(5.0, LengthUnit.FEET);
 
-        var feet = new QuantityMeasurementApp.QuantityLength(6.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
+        var result = q1.subtract(q2);
 
-        var inch = new QuantityMeasurementApp.QuantityLength(72.0,
-                QuantityMeasurementApp.LengthUnit.INCH);
+        assertEquals(10.0, q1.getValue()); // unchanged
+        assertEquals(5.0, q2.getValue());  // unchanged
+        assertEquals(5.0, result.getValue());
+    }
 
-        assertTrue(yard.equals(feet));
-        assertTrue(feet.equals(inch));
-        assertTrue(yard.equals(inch));
+    // =========================
+    // ROUNDING
+    // =========================
+
+    @Test
+    void testRounding_AddSubtract() {
+
+        var result = new Quantity<>(1.333, LengthUnit.FEET)
+                .subtract(new Quantity<>(0.111, LengthUnit.FEET));
+
+        assertEquals(1.22, result.getValue(), 1e-2);
     }
 }
