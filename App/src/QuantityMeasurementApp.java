@@ -65,41 +65,53 @@ public class QuantityMeasurementApp {
 
         /*
          * ===========================
-         * ADD METHOD (CORE UC6)
+         * UC6: Add (default → first unit)
          * ===========================
-         * Result in unit of FIRST operand
          */
         public QuantityLength add(QuantityLength other) {
+            return add(other, this.unit);
+        }
+
+        /*
+         * ===========================
+         * UC7: Add with TARGET UNIT
+         * ===========================
+         */
+        public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
 
             if (other == null) {
                 throw new IllegalArgumentException("Second operand cannot be null");
             }
 
-            double sumInFeet = this.toBaseUnit() + other.toBaseUnit();
+            if (targetUnit == null) {
+                throw new IllegalArgumentException("Target unit cannot be null");
+            }
 
-            double result = this.unit.fromFeet(sumInFeet);
+            double sumFeet = this.toBaseUnit() + other.toBaseUnit();
 
-            return new QuantityLength(result, this.unit);
+            double result = targetUnit.fromFeet(sumFeet);
+
+            return new QuantityLength(result, targetUnit);
         }
 
         /*
-         * STATIC ADD (optional overload)
+         * STATIC OVERLOADS
          */
-        public static QuantityLength add(QuantityLength q1, QuantityLength q2) {
-            return q1.add(q2);
+        public static QuantityLength add(QuantityLength q1,
+                                         QuantityLength q2,
+                                         LengthUnit targetUnit) {
+            return q1.add(q2, targetUnit);
         }
 
-        /*
-         * STATIC ADD (raw values overload)
-         */
         public static QuantityLength add(double v1, LengthUnit u1,
-                                         double v2, LengthUnit u2) {
+                                         double v2, LengthUnit u2,
+                                         LengthUnit targetUnit) {
             return new QuantityLength(v1, u1)
-                    .add(new QuantityLength(v2, u2));
+                    .add(new QuantityLength(v2, u2), targetUnit);
         }
 
         /*
-         * EQUALITY (UC3+)
+         * EQUALITY
          */
         @Override
         public boolean equals(Object obj) {
@@ -131,16 +143,18 @@ public class QuantityMeasurementApp {
      */
     public static void main(String[] args) {
 
-        QuantityLength result1 =
-                new QuantityLength(1.0, LengthUnit.FEET)
-                        .add(new QuantityLength(12.0, LengthUnit.INCH));
+        var result1 = QuantityLength.add(
+                new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(12.0, LengthUnit.INCH),
+                LengthUnit.FEET);
 
         System.out.println(result1); // 2 FEET
 
-        QuantityLength result2 =
-                new QuantityLength(1.0, LengthUnit.YARD)
-                        .add(new QuantityLength(3.0, LengthUnit.FEET));
+        var result2 = QuantityLength.add(
+                new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(12.0, LengthUnit.INCH),
+                LengthUnit.YARD);
 
-        System.out.println(result2); // 2 YARD
+        System.out.println(result2); // ~0.667 YARD
     }
 }
