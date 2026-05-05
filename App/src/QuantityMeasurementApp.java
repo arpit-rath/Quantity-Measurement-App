@@ -7,7 +7,6 @@ public class QuantityMeasurementApp {
      * ===========================
      */
     public enum LengthUnit {
-
         FEET(1.0),
         INCH(1.0 / 12.0),
         YARD(3.0),
@@ -41,7 +40,7 @@ public class QuantityMeasurementApp {
         public QuantityLength(double value, LengthUnit unit) {
 
             if (!Double.isFinite(value)) {
-                throw new IllegalArgumentException("Invalid numeric value");
+                throw new IllegalArgumentException("Invalid value");
             }
 
             if (unit == null) {
@@ -65,19 +64,43 @@ public class QuantityMeasurementApp {
         }
 
         /*
-         * Instance conversion method (returns NEW object)
+         * ===========================
+         * ADD METHOD (CORE UC6)
+         * ===========================
+         * Result in unit of FIRST operand
          */
-        public QuantityLength convertTo(LengthUnit targetUnit) {
-            if (targetUnit == null) {
-                throw new IllegalArgumentException("Target unit cannot be null");
+        public QuantityLength add(QuantityLength other) {
+
+            if (other == null) {
+                throw new IllegalArgumentException("Second operand cannot be null");
             }
 
-            double base = toBaseUnit();
-            double converted = targetUnit.fromFeet(base);
+            double sumInFeet = this.toBaseUnit() + other.toBaseUnit();
 
-            return new QuantityLength(converted, targetUnit);
+            double result = this.unit.fromFeet(sumInFeet);
+
+            return new QuantityLength(result, this.unit);
         }
 
+        /*
+         * STATIC ADD (optional overload)
+         */
+        public static QuantityLength add(QuantityLength q1, QuantityLength q2) {
+            return q1.add(q2);
+        }
+
+        /*
+         * STATIC ADD (raw values overload)
+         */
+        public static QuantityLength add(double v1, LengthUnit u1,
+                                         double v2, LengthUnit u2) {
+            return new QuantityLength(v1, u1)
+                    .add(new QuantityLength(v2, u2));
+        }
+
+        /*
+         * EQUALITY (UC3+)
+         */
         @Override
         public boolean equals(Object obj) {
 
@@ -103,56 +126,21 @@ public class QuantityMeasurementApp {
 
     /*
      * ===========================
-     * STATIC CONVERSION API
-     * ===========================
-     */
-    public static double convert(double value, LengthUnit source, LengthUnit target) {
-
-        if (!Double.isFinite(value)) {
-            throw new IllegalArgumentException("Invalid value");
-        }
-
-        if (source == null || target == null) {
-            throw new IllegalArgumentException("Units cannot be null");
-        }
-
-        double base = source.toFeet(value);
-        return target.fromFeet(base);
-    }
-
-    /*
-     * ===========================
-     * METHOD OVERLOADING DEMO
-     * ===========================
-     */
-
-    // Method 1
-    public static double demonstrateLengthConversion(double value,
-                                                     LengthUnit from,
-                                                     LengthUnit to) {
-        return convert(value, from, to);
-    }
-
-    // Method 2
-    public static double demonstrateLengthConversion(QuantityLength q,
-                                                     LengthUnit to) {
-        return q.convertTo(to).getValue();
-    }
-
-    /*
-     * ===========================
      * MAIN METHOD
      * ===========================
      */
     public static void main(String[] args) {
 
-        System.out.println("convert(1.0, FEET, INCH) = "
-                + convert(1.0, LengthUnit.FEET, LengthUnit.INCH));
+        QuantityLength result1 =
+                new QuantityLength(1.0, LengthUnit.FEET)
+                        .add(new QuantityLength(12.0, LengthUnit.INCH));
 
-        System.out.println("convert(3.0, YARD, FEET) = "
-                + convert(3.0, LengthUnit.YARD, LengthUnit.FEET));
+        System.out.println(result1); // 2 FEET
 
-        System.out.println("convert(1.0, CM, INCH) = "
-                + convert(1.0, LengthUnit.CM, LengthUnit.INCH));
+        QuantityLength result2 =
+                new QuantityLength(1.0, LengthUnit.YARD)
+                        .add(new QuantityLength(3.0, LengthUnit.FEET));
+
+        System.out.println(result2); // 2 YARD
     }
 }
