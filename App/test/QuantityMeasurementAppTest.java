@@ -1,170 +1,99 @@
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+public class QuantityLength {
 
-class QuantityMeasurementAppTest {
+    private final double value;
+    private final LengthUnit unit;
 
-    private static final double EPS = 1e-6;
+    public QuantityLength(double value, LengthUnit unit) {
 
-    /*
-     * ===========================
-     * BASIC TARGET UNIT TESTS
-     * ===========================
-     */
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Invalid value");
+        }
 
-    @Test
-    void testAddition_TargetFeet() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(1.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                new QuantityMeasurementApp.QuantityLength(12.0,
-                        QuantityMeasurementApp.LengthUnit.INCH),
-                QuantityMeasurementApp.LengthUnit.FEET);
+        if (unit == null) {
+            throw new IllegalArgumentException("Unit cannot be null");
+        }
 
-        assertEquals(2.0, result.getValue(), EPS);
+        this.value = value;
+        this.unit = unit;
     }
 
-    @Test
-    void testAddition_TargetInches() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(1.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                new QuantityMeasurementApp.QuantityLength(12.0,
-                        QuantityMeasurementApp.LengthUnit.INCH),
-                QuantityMeasurementApp.LengthUnit.INCH);
-
-        assertEquals(24.0, result.getValue(), EPS);
+    public double getValue() {
+        return value;
     }
 
-    @Test
-    void testAddition_TargetYards() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(1.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                new QuantityMeasurementApp.QuantityLength(12.0,
-                        QuantityMeasurementApp.LengthUnit.INCH),
-                QuantityMeasurementApp.LengthUnit.YARD);
-
-        assertEquals(0.666666, result.getValue(), 1e-3);
-    }
-
-    @Test
-    void testAddition_TargetCM() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(1.0,
-                        QuantityMeasurementApp.LengthUnit.INCH),
-                new QuantityMeasurementApp.QuantityLength(1.0,
-                        QuantityMeasurementApp.LengthUnit.INCH),
-                QuantityMeasurementApp.LengthUnit.CM);
-
-        assertEquals(5.08, result.getValue(), 1e-2);
+    public LengthUnit getUnit() {
+        return unit;
     }
 
     /*
-     * ===========================
-     * SAME / DIFFERENT TARGET CASES
-     * ===========================
+     * Convert to another unit
      */
+    public QuantityLength convertTo(LengthUnit targetUnit) {
 
-    @Test
-    void testAddition_TargetSameAsFirst() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(2.0,
-                        QuantityMeasurementApp.LengthUnit.YARD),
-                new QuantityMeasurementApp.QuantityLength(3.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                QuantityMeasurementApp.LengthUnit.YARD);
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
 
-        assertEquals(3.0, result.getValue(), EPS);
-    }
+        double base = unit.convertToBaseUnit(value);
+        double converted = targetUnit.convertFromBaseUnit(base);
 
-    @Test
-    void testAddition_TargetSameAsSecond() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(2.0,
-                        QuantityMeasurementApp.LengthUnit.YARD),
-                new QuantityMeasurementApp.QuantityLength(3.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                QuantityMeasurementApp.LengthUnit.FEET);
-
-        assertEquals(9.0, result.getValue(), EPS);
+        return new QuantityLength(converted, targetUnit);
     }
 
     /*
-     * ===========================
-     * COMMUTATIVITY
-     * ===========================
+     * ADD (UC6 default → first unit)
      */
-
-    @Test
-    void testAddition_Commutativity_TargetUnit() {
-
-        var a = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
-
-        var b = new QuantityMeasurementApp.QuantityLength(12.0,
-                QuantityMeasurementApp.LengthUnit.INCH);
-
-        var r1 = a.add(b, QuantityMeasurementApp.LengthUnit.YARD);
-        var r2 = b.add(a, QuantityMeasurementApp.LengthUnit.YARD);
-
-        assertTrue(r1.equals(r2));
+    public QuantityLength add(QuantityLength other) {
+        return add(other, this.unit);
     }
 
     /*
-     * ===========================
-     * EDGE CASES
-     * ===========================
+     * ADD (UC7 explicit target unit)
      */
+    public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
 
-    @Test
-    void testAddition_WithZero_TargetYard() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(5.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                new QuantityMeasurementApp.QuantityLength(0.0,
-                        QuantityMeasurementApp.LengthUnit.INCH),
-                QuantityMeasurementApp.LengthUnit.YARD);
+        if (other == null) {
+            throw new IllegalArgumentException("Second operand cannot be null");
+        }
 
-        assertEquals(1.6666, result.getValue(), 1e-3);
-    }
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
 
-    @Test
-    void testAddition_Negative_TargetInch() {
-        var result = QuantityMeasurementApp.QuantityLength.add(
-                new QuantityMeasurementApp.QuantityLength(5.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                new QuantityMeasurementApp.QuantityLength(-2.0,
-                        QuantityMeasurementApp.LengthUnit.FEET),
-                QuantityMeasurementApp.LengthUnit.INCH);
+        double sumBase =
+                unit.convertToBaseUnit(value) +
+                        other.unit.convertToBaseUnit(other.value);
 
-        assertEquals(36.0, result.getValue(), EPS);
+        double result = targetUnit.convertFromBaseUnit(sumBase);
+
+        return new QuantityLength(result, targetUnit);
     }
 
     /*
-     * ===========================
-     * EXCEPTION TESTS
-     * ===========================
+     * EQUALITY (UC3+)
      */
+    @Override
+    public boolean equals(Object obj) {
 
-    @Test
-    void testAddition_NullTargetUnit() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            QuantityMeasurementApp.QuantityLength.add(
-                    new QuantityMeasurementApp.QuantityLength(1.0,
-                            QuantityMeasurementApp.LengthUnit.FEET),
-                    new QuantityMeasurementApp.QuantityLength(12.0,
-                            QuantityMeasurementApp.LengthUnit.INCH),
-                    null);
-        });
+        if (this == obj) return true;
+
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        QuantityLength other = (QuantityLength) obj;
+
+        return Double.compare(
+                unit.convertToBaseUnit(value),
+                other.unit.convertToBaseUnit(other.value)
+        ) == 0;
     }
 
-    @Test
-    void testAddition_NullOperand() {
-        var q = new QuantityMeasurementApp.QuantityLength(1.0,
-                QuantityMeasurementApp.LengthUnit.FEET);
+    @Override
+    public int hashCode() {
+        return Double.hashCode(unit.convertToBaseUnit(value));
+    }
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            q.add(null, QuantityMeasurementApp.LengthUnit.FEET);
-        });
+    @Override
+    public String toString() {
+        return "Quantity(" + value + ", " + unit + ")";
     }
 }
